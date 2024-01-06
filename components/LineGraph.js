@@ -1,44 +1,55 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, Dimensions } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
-import firebase from 'firebase/app';
+import { getDatabase, ref, onValue } from 'firebase/database';
+import { app } from '../config/firebaseConfig';
+
+const database = getDatabase(app);
+const bloodglucoInDB = ref(database, "BloodGlucose");
 
 const LineGraph = () => {
-  const [data, setData] = useState([0]);
+  const [bloodglucoData, setBloodglucoData] = useState([]);
 
   useEffect(() => {
-    const databaseRef = firebase.database().ref('/BloodGlucose');
-
-    const onDataUpdate = (snapshot) => {
-      const newData = snapshot.val();
-      setData([...data, newData]);
-    };
-
-    databaseRef.on('value', onDataUpdate);
+    const unsubscribe = onValue(bloodglucoInDB, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        // Convert object to an array of values
+        const dataArray = Object.values(data);
+        console.log('Received data from Firebase:', dataArray);
+        setBloodglucoData(dataArray);
+      }
+    });
 
     return () => {
       // Unsubscribe when the component is unmounted
-      databaseRef.off('value', onDataUpdate);
+      unsubscribe();
     };
-  }, [data]);
+  }, []);
+
+  console.log('Rendering LineGraph with data:', bloodglucoData);
 
   return (
     <View>
-      <Text>Real-Time Line Chart</Text>
-      <LineChart
-        data={{
-          labels: Array.from({ length: data.length }, (_, i) => i + 1),
-          datasets: [{ data }],
-        }}
-        width={Dimensions.get('window').width}
-        height={200}
-        yAxisLabel={'$'}
-        chartConfig={{
-          backgroundGradientFrom: 'darkblue',
-          backgroundGradientTo: 'blue',
-          color: (opacity = 3) => `rgba(255, 255, 255, ${opacity})`,
-        }}
-      />
+      {bloodglucoData.length > 0 ? (
+        <LineChart
+          data={{
+            labels: Array.from({ length: bloodglucoData.length }, (_, i) => (i)),
+            datasets: [{ data: bloodglucoData }],
+          }}
+          width={Dimensions.get('window').width}
+          height={240}
+          chartConfig={{
+            backgroundGradientFrom: '#EAF6FF',
+            backgroundGradientTo: '#EAF6FF',
+            color: (opacity = 1) => `rgba(253, 71, 85, ${opacity})`,
+            decimalPlaces: 0,
+          }}
+          bezier
+        />
+      ) : (
+        <Text>No data available</Text>
+      )}
     </View>
   );
 };

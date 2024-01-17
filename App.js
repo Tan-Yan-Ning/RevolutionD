@@ -7,6 +7,9 @@ import SecondStep from './screens/SecondStep';
 import ThirdStep from './screens/ThirdStep';
 import Monitor from './screens/Monitor';
 import History from './screens/History';
+import PostmanTest from './test';
+import ArdunioTest from './ardunio';
+
 
 const Stack = createNativeStackNavigator();
 
@@ -14,6 +17,9 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator>
+      
+      <Stack.Screen name="ardunio" component={ArdunioTest} />
+      <Stack.Screen name="test" component={PostmanTest} />
         <Stack.Screen name="Splash" component={Splash} />
         <Stack.Screen name="FirstStep" component={FirstStep}/>
         <Stack.Screen name="SecondStep" component={SecondStep}/>
